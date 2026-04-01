@@ -339,11 +339,21 @@ export const activity = [
   "TypeScript snippets now make up the highest review volume",
 ];
 
+export const activityHeights = [32, 48, 40, 58, 66, 54, 76];
+
 export const categories = [
   { name: "Input Validation", count: 18 },
   { name: "Error Handling", count: 14 },
   { name: "Type Safety", count: 11 },
   { name: "Performance", count: 8 },
+];
+
+export const languageDistribution = [
+  "TypeScript 42%",
+  "Python 24%",
+  "Go 16%",
+  "React 11%",
+  "Node.js 7%",
 ];
 
 export const navItems = [
