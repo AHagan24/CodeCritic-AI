@@ -1,3 +1,4 @@
+import { memo } from "react";
 import {
   AlertTriangle,
   CheckCheck,
@@ -29,12 +30,12 @@ function getScoreTone(score: number) {
   return "text-rose-300";
 }
 
-export default function ReviewResults({
+function ReviewResults({
   result,
   loading,
 }: ReviewResultsProps) {
   return (
-    <section className="rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.98),rgba(11,11,14,0.96))] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.38)]">
+    <section className="rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.98),rgba(11,11,14,0.96))] p-6 shadow-[0_14px_44px_rgba(0,0,0,0.28)]">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-400">
@@ -87,13 +88,13 @@ export default function ReviewResults({
       {loading ? (
         <div className="mt-6 space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="h-28 animate-pulse rounded-[24px] bg-white/5" />
-            <div className="h-28 animate-pulse rounded-[24px] bg-white/5" />
-            <div className="h-28 animate-pulse rounded-[24px] bg-white/5" />
+            <div className="h-28 rounded-[24px] border border-white/6 bg-white/[0.04]" />
+            <div className="h-28 rounded-[24px] border border-white/6 bg-white/[0.04]" />
+            <div className="h-28 rounded-[24px] border border-white/6 bg-white/[0.04]" />
           </div>
-          <div className="h-32 animate-pulse rounded-[24px] bg-white/5" />
-          <div className="h-44 animate-pulse rounded-[24px] bg-white/5" />
-          <div className="h-60 animate-pulse rounded-[24px] bg-white/5" />
+          <div className="h-32 rounded-[24px] border border-white/6 bg-white/[0.04]" />
+          <div className="h-44 rounded-[24px] border border-white/6 bg-white/[0.04]" />
+          <div className="h-60 rounded-[24px] border border-white/6 bg-white/[0.04]" />
         </div>
       ) : null}
 
@@ -276,3 +277,5 @@ export default function ReviewResults({
     </section>
   );
 }
+
+export default memo(ReviewResults);

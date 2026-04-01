@@ -33,6 +33,7 @@ html {
     radial-gradient(circle at 20% 80%, rgba(161, 161, 170, 0.04), transparent 22%),
     #09090b;
   color-scheme: dark;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -40,7 +41,9 @@ body {
   background: transparent;
   color: var(--foreground);
   font-family: var(--font-geist-sans), sans-serif;
-  text-rendering: optimizeLegibility;
+  text-rendering: optimizeSpeed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 ::selection {

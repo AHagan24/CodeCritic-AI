@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { memo, useState } from "react";
 import type { FormEvent } from "react";
 import {
   ArrowUpRight,
@@ -14,8 +14,10 @@ import ReviewForm from "@/components/ReviewForm";
 import ReviewResults from "@/components/ReviewResults";
 import {
   activity,
+  activityHeights,
   categories,
   defaultCode,
+  languageDistribution,
   mockReviewByType,
   navItems,
   recentReviews,
@@ -24,7 +26,8 @@ import {
 import type { ReviewResponse, ReviewStatus } from "@/app/types/review";
 
 function getMockReview(language: string, reviewType: string): ReviewResponse {
-  const preset = mockReviewByType[reviewType] ?? mockReviewByType["Full Review"];
+  const preset =
+    mockReviewByType[reviewType] ?? mockReviewByType["Full Review"];
 
   return {
     ...preset,
@@ -44,6 +47,41 @@ function getStatusClassName(status: ReviewStatus) {
 
   return "border-sky-500/20 bg-sky-500/10 text-sky-200";
 }
+
+const DashboardNav = memo(function DashboardNav() {
+  return (
+    <nav className="flex flex-wrap items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1">
+      {navItems.map((item) => (
+        <button
+          key={item.label}
+          type="button"
+          className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm duration-150 transition-colors ${
+            item.active
+              ? "bg-white text-black shadow-[0_6px_18px_rgba(255,255,255,0.06)]"
+              : "text-zinc-400 hover:bg-white/5 hover:text-white"
+          }`}
+        >
+          <item.icon className="size-4" />
+          {item.label}
+        </button>
+      ))}
+    </nav>
+  );
+});
+
+const ActivityBars = memo(function ActivityBars() {
+  return (
+    <div className="mt-6 flex h-24 items-end gap-2">
+      {activityHeights.map((height, index) => (
+        <div
+          key={index}
+          className="flex-1 rounded-t-full bg-[linear-gradient(180deg,rgba(244,244,245,0.88),rgba(56,189,248,0.16))]"
+          style={{ height: `${height}px` }}
+        />
+      ))}
+    </div>
+  );
+});
 
 export default function Dashboard() {
   const [code, setCode] = useState(defaultCode);
@@ -76,7 +114,7 @@ export default function Dashboard() {
   return (
     <main className="min-h-screen bg-background px-4 py-5 text-white sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="rounded-[32px] border border-white/10 bg-[rgba(9,9,11,0.78)] shadow-[0_32px_120px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+        <div className="rounded-[32px] border border-white/10 bg-[rgba(9,9,11,0.9)] shadow-lg">
           <header className="border-b border-white/10 px-5 py-4 sm:px-6 lg:px-8">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-4">
@@ -93,22 +131,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <nav className="flex flex-wrap items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1">
-                {navItems.map((item) => (
-                  <button
-                    key={item.label}
-                    type="button"
-                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm transition ${
-                      item.active
-                        ? "bg-white text-black shadow-[0_10px_30px_rgba(255,255,255,0.08)]"
-                        : "text-zinc-400 hover:bg-white/5 hover:text-white"
-                    }`}
-                  >
-                    <item.icon className="size-4" />
-                    {item.label}
-                  </button>
-                ))}
-              </nav>
+              <DashboardNav />
 
               <div className="flex items-center gap-3">
                 <div className="hidden rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-zinc-400 md:block">
@@ -123,7 +146,7 @@ export default function Dashboard() {
 
           <div className="px-5 py-6 sm:px-6 lg:px-8 lg:py-8">
             <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-              <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.95),rgba(11,11,14,0.92))] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+              <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.95),rgba(11,11,14,0.92))] p-6 shadow-md">
                 <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1.5 text-[11px] font-medium text-sky-100">
                   <Sparkles className="size-3.5" />
                   AI-Powered Developer Tool
@@ -142,14 +165,14 @@ export default function Dashboard() {
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   <Link
                     href="#workspace-form"
-                    className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-zinc-200"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black duration-150 transition-colors hover:bg-zinc-200"
                   >
                     Run New Review
                     <ArrowUpRight className="size-4" />
                   </Link>
                   <Link
                     href="#recent-reviews"
-                    className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-zinc-200 transition hover:bg-white/10"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-zinc-200 duration-150 transition-colors hover:bg-white/10"
                   >
                     View Recent Reviews
                     <ChevronRight className="size-4" />
@@ -158,7 +181,7 @@ export default function Dashboard() {
               </div>
 
               <div className="grid gap-4">
-                <article className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(17,17,20,0.98),rgba(11,11,14,0.96))] p-6">
+                <article className="rounded-[30px] border border-white/10 bg-[#0f0f12] p-6">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
@@ -173,15 +196,7 @@ export default function Dashboard() {
                     </span>
                   </div>
 
-                  <div className="mt-6 flex h-24 items-end gap-2">
-                    {[32, 48, 40, 58, 66, 54, 76].map((height, index) => (
-                      <div
-                        key={index}
-                        className="flex-1 rounded-t-full bg-[linear-gradient(180deg,rgba(244,244,245,0.92),rgba(56,189,248,0.18))]"
-                        style={{ height: `${height}px` }}
-                      />
-                    ))}
-                  </div>
+                  <ActivityBars />
 
                   <p className="mt-4 text-sm leading-6 text-zinc-400">
                     Critical findings are stabilizing while review volume
@@ -189,7 +204,7 @@ export default function Dashboard() {
                   </p>
                 </article>
 
-                <article className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(17,17,20,0.98),rgba(11,11,14,0.96))] p-6">
+                <article className="rounded-[30px] border border-white/10 bg-[#0f0f12] p-6">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
@@ -209,7 +224,9 @@ export default function Dashboard() {
                         className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.045] px-4 py-3"
                       >
                         <span className="mt-1 size-2 rounded-full bg-sky-300" />
-                        <p className="text-sm leading-6 text-zinc-300">{item}</p>
+                        <p className="text-sm leading-6 text-zinc-300">
+                          {item}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -235,7 +252,9 @@ export default function Dashboard() {
                   <p className="mt-2 text-2xl font-semibold tracking-tight text-white">
                     {stat.value}
                   </p>
-                  <p className="mt-2 text-sm text-zinc-500">{stat.description}</p>
+                  <p className="mt-2 text-sm text-zinc-500">
+                    {stat.description}
+                  </p>
                 </article>
               ))}
             </section>
@@ -297,7 +316,9 @@ export default function Dashboard() {
                         className="grid gap-3 bg-[#0a0a0d] px-4 py-4 md:grid-cols-[1.5fr_0.9fr_1fr_0.75fr_0.85fr_0.9fr] md:items-center"
                       >
                         <div>
-                          <p className="font-medium text-white">{review.name}</p>
+                          <p className="font-medium text-white">
+                            {review.name}
+                          </p>
                           <p className="mt-1 text-sm text-zinc-500 md:hidden">
                             {review.language} · {review.reviewType}
                           </p>
@@ -348,7 +369,9 @@ export default function Dashboard() {
                       <div key={category.name}>
                         <div className="flex items-center justify-between gap-3 text-sm">
                           <span className="text-zinc-300">{category.name}</span>
-                          <span className="text-zinc-500">{category.count}</span>
+                          <span className="text-zinc-500">
+                            {category.count}
+                          </span>
                         </div>
                         <div className="mt-2 h-2 rounded-full bg-white/8">
                           <div
@@ -370,13 +393,7 @@ export default function Dashboard() {
                   </h2>
 
                   <div className="mt-5 flex flex-wrap gap-2">
-                    {[
-                      "TypeScript 42%",
-                      "Python 24%",
-                      "Go 16%",
-                      "React 11%",
-                      "Node.js 7%",
-                    ].map((tag) => (
+                    {languageDistribution.map((tag) => (
                       <span
                         key={tag}
                         className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-300"
@@ -387,8 +404,9 @@ export default function Dashboard() {
                   </div>
 
                   <p className="mt-4 text-sm leading-6 text-zinc-400">
-                    TypeScript service-layer code still drives the highest volume,
-                    with Python utilities and Go handlers following behind.
+                    TypeScript service-layer code still drives the highest
+                    volume, with Python utilities and Go handlers following
+                    behind.
                   </p>
                 </article>
               </div>
