@@ -107,11 +107,9 @@ function ReviewResults({
               </p>
               <div className="mt-4 flex items-end gap-3">
                 <span
-                  className={`text-4xl font-semibold tracking-tight ${getScoreTone(
-                    result.score ?? 0,
-                  )}`}
+                  className={`text-4xl font-semibold tracking-tight ${getScoreTone(result.score)}`}
                 >
-                  {result.score ?? "--"}
+                  {result.score}
                 </span>
                 <span className="pb-1 text-sm text-zinc-500">/100</span>
               </div>
