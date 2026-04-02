@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { memo, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { ArrowUpRight, ChevronRight, Minus, Sparkles } from "lucide-react";
 import ReviewForm from "@/components/ReviewForm";
@@ -14,10 +14,13 @@ import {
   defaultCode,
   languageDistribution,
   navItems,
-  recentReviews,
   stats,
 } from "@/components/dashboard/mockData";
-import type { ReviewResponse, ReviewStatus } from "@/app/types/review";
+import type {
+  ReviewHistoryItem,
+  ReviewResponse,
+  ReviewStatus,
+} from "@/app/types/review";
 import codeCriticLogo from "../assets/CodeCriticLogo.png";
 
 function getStatusClassName(status: ReviewStatus) {
@@ -72,8 +75,50 @@ export default function Dashboard() {
   const [language, setLanguage] = useState("TypeScript");
   const [reviewType, setReviewType] = useState("Full Review");
   const [loading, setLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [error, setError] = useState("");
   const [result, setResult] = useState<ReviewResponse | null>(null);
+  const [recentReviews, setRecentReviews] = useState<ReviewHistoryItem[]>([]);
+  const recentReviewsRequestIdRef = useRef(0);
+
+  async function loadRecentReviews() {
+    const requestId = recentReviewsRequestIdRef.current + 1;
+    recentReviewsRequestIdRef.current = requestId;
+
+    try {
+      setHistoryLoading(true);
+
+      const response = await fetch("/api/review");
+
+      if (!response.ok) {
+        throw new Error("Failed to load review history.");
+      }
+
+      const data = (await response.json()) as ReviewHistoryItem[];
+
+      if (requestId === recentReviewsRequestIdRef.current) {
+        setRecentReviews(data);
+      }
+    } catch (error) {
+      console.error("Review history error:", error);
+
+      if (requestId === recentReviewsRequestIdRef.current) {
+        setRecentReviews([]);
+      }
+    } finally {
+      if (requestId === recentReviewsRequestIdRef.current) {
+        setHistoryLoading(false);
+      }
+    }
+  }
+
+  useEffect(() => {
+    void loadRecentReviews();
+
+    return () => {
+      recentReviewsRequestIdRef.current += 1;
+    };
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -108,6 +153,7 @@ export default function Dashboard() {
       }
 
       setResult(data);
+      await loadRecentReviews();
     } catch (error) {
       setResult(null);
       setError(
@@ -322,40 +368,50 @@ export default function Dashboard() {
                   </div>
 
                   <div className="divide-y divide-white/10">
-                    {recentReviews.map((review) => (
-                      <article
-                        key={review.id}
-                        className="grid gap-3 bg-[#0a0a0d] px-4 py-4 md:grid-cols-[1.5fr_0.9fr_1fr_0.75fr_0.85fr_0.9fr] md:items-center"
-                      >
-                        <div>
-                          <p className="font-medium text-white">
-                            {review.name}
+                    {historyLoading ? (
+                      <div className="bg-[#0a0a0d] px-4 py-8 text-sm text-zinc-500">
+                        Loading recent reviews...
+                      </div>
+                    ) : recentReviews.length === 0 ? (
+                      <div className="bg-[#0a0a0d] px-4 py-8 text-sm text-zinc-500">
+                        No saved reviews yet.
+                      </div>
+                    ) : (
+                      recentReviews.map((review) => (
+                        <article
+                          key={review.id}
+                          className="grid gap-3 bg-[#0a0a0d] px-4 py-4 md:grid-cols-[1.5fr_0.9fr_1fr_0.75fr_0.85fr_0.9fr] md:items-center"
+                        >
+                          <div>
+                            <p className="font-medium text-white">
+                              {review.name}
+                            </p>
+                            <p className="mt-1 text-sm text-zinc-500 md:hidden">
+                              {review.language} · {review.reviewType}
+                            </p>
+                          </div>
+                          <p className="hidden text-sm text-zinc-300 md:block">
+                            {review.language}
                           </p>
-                          <p className="mt-1 text-sm text-zinc-500 md:hidden">
-                            {review.language} · {review.reviewType}
+                          <p className="hidden text-sm text-zinc-300 md:block">
+                            {review.reviewType}
                           </p>
-                        </div>
-                        <p className="hidden text-sm text-zinc-300 md:block">
-                          {review.language}
-                        </p>
-                        <p className="hidden text-sm text-zinc-300 md:block">
-                          {review.reviewType}
-                        </p>
-                        <p className="text-sm font-medium text-white">
-                          {review.score}
-                        </p>
-                        <p className="text-sm text-zinc-400">{review.date}</p>
-                        <div>
-                          <span
-                            className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${getStatusClassName(
-                              review.status,
-                            )}`}
-                          >
-                            {review.status}
-                          </span>
-                        </div>
-                      </article>
-                    ))}
+                          <p className="text-sm font-medium text-white">
+                            {review.score}
+                          </p>
+                          <p className="text-sm text-zinc-400">{review.date}</p>
+                          <div>
+                            <span
+                              className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${getStatusClassName(
+                                review.status,
+                              )}`}
+                            >
+                              {review.status}
+                            </span>
+                          </div>
+                        </article>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>

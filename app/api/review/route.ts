@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { openai } from "../../lib/openai";
 import type { ReviewResponse } from "../../types/review";
+import { connectToDatabase } from "../../lib/db";
+import Review from "../../models/Review";
+import type { ReviewHistoryItem } from "../../types/review";
 
 const mockResponse: ReviewResponse = {
   score: 78,
@@ -123,6 +126,82 @@ function getMockReviewResponse() {
   return NextResponse.json(mockResponse);
 }
 
+function getReviewStatus(score: number): ReviewHistoryItem["status"] {
+  if (score >= 85) {
+    return "Completed";
+  }
+
+  if (score >= 70) {
+    return "Needs Attention";
+  }
+
+  return "Queued";
+}
+
+function getReviewName(code: string, index: number) {
+  const firstMeaningfulLine = code
+    .split("\n")
+    .map((line) => line.trim())
+    .find((line) => line.length > 0);
+
+  if (!firstMeaningfulLine) {
+    return `Snippet ${index + 1}`;
+  }
+
+  return firstMeaningfulLine.slice(0, 48);
+}
+
+function formatReviewDate(value: Date | string) {
+  return new Date(value).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function parseReviewResponse(value: string): ReviewResponse | null {
+  const parsed: unknown = JSON.parse(value);
+
+  if (!isValidReviewResponse(parsed)) {
+    return null;
+  }
+
+  return parsed;
+}
+
+export async function GET() {
+  try {
+    await connectToDatabase();
+
+    const reviews = await Review.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select("_id code language reviewType score createdAt")
+      .lean();
+
+    const recentReviews: ReviewHistoryItem[] = reviews.map((review, index) => ({
+      id: String(review._id),
+      name: getReviewName(review.code, index),
+      language: review.language,
+      reviewType: review.reviewType,
+      score: review.score,
+      date: formatReviewDate(review.createdAt),
+      status: getReviewStatus(review.score),
+    }));
+
+    return NextResponse.json(recentReviews);
+  } catch (error) {
+    console.error("Recent reviews error:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to fetch recent reviews",
+        details: String(error),
+      },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -146,9 +225,17 @@ export async function POST(request: Request) {
       );
     }
 
-    // Keep public/deployed usage from burning your credits.
-    if (!process.env.OPENAI_API_KEY || process.env.NODE_ENV === "production") {
+    // Keep local/dev usage from burning your credits.
+    if (!process.env.OPENAI_API_KEY && process.env.NODE_ENV !== "production") {
       return getMockReviewResponse();
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      console.error("AI review error: OPENAI_API_KEY is not configured.");
+      return NextResponse.json(
+        { error: "AI review service is not configured." },
+        { status: 500 },
+      );
     }
 
     const completion = await openai.chat.completions.create({
@@ -183,12 +270,24 @@ ${code}`,
       return getMockReviewResponse();
     }
 
-    const parsed = JSON.parse(output) as unknown;
+    const parsed = parseReviewResponse(output);
 
-    if (!isValidReviewResponse(parsed)) {
+    if (!parsed) {
       console.error("AI review error: AI returned an invalid review format.");
       return getMockReviewResponse();
     }
+
+    await connectToDatabase();
+
+    await Review.create({
+      code,
+      language,
+      reviewType,
+      score: parsed.score,
+      summary: parsed.summary,
+      issues: parsed.issues,
+      improvedCode: parsed.improvedCode,
+    });
 
     return NextResponse.json(parsed);
   } catch (error) {
