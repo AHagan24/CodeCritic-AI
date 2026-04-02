@@ -1,15 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { memo, useState } from "react";
 import type { FormEvent } from "react";
-import {
-  ArrowUpRight,
-  ChevronRight,
-  GitBranch,
-  Minus,
-  Sparkles,
-} from "lucide-react";
+import { ArrowUpRight, ChevronRight, Minus, Sparkles } from "lucide-react";
 import ReviewForm from "@/components/ReviewForm";
 import ReviewResults from "@/components/ReviewResults";
 import {
@@ -18,23 +13,12 @@ import {
   categories,
   defaultCode,
   languageDistribution,
-  mockReviewByType,
   navItems,
   recentReviews,
   stats,
 } from "@/components/dashboard/mockData";
 import type { ReviewResponse, ReviewStatus } from "@/app/types/review";
-
-function getMockReview(language: string, reviewType: string): ReviewResponse {
-  const preset =
-    mockReviewByType[reviewType] ?? mockReviewByType["Full Review"];
-
-  return {
-    ...preset,
-    language,
-    reviewType,
-  };
-}
+import codeCriticLogo from "../assets/CodeCriticLogo.png";
 
 function getStatusClassName(status: ReviewStatus) {
   if (status === "Completed") {
@@ -89,47 +73,50 @@ export default function Dashboard() {
   const [reviewType, setReviewType] = useState("Full Review");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-const [result, setResult] = useState<ReviewResponse | null>(null);
+  const [result, setResult] = useState<ReviewResponse | null>(null);
 
-async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-  event.preventDefault();
-  setError("");
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
 
-  if (!code.trim()) {
-    setResult(null);
-    setError("Paste a code snippet to generate a review.");
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-    const response = await fetch("/api/review", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        code,
-        language,
-        reviewType,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || "Failed to generate AI review.");
+    if (!code.trim()) {
+      setResult(null);
+      setError("Paste a code snippet to generate a review.");
+      return;
     }
 
-    setResult(data);
-  } catch (error) {
-    setResult(null);
-    setError(error instanceof Error ? error.message : "Something went wrong.");
-  } finally {
-    setLoading(false);
+    try {
+      setLoading(true);
+      setResult(null);
+
+      const response = await fetch("/api/review", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          code,
+          language,
+          reviewType,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to generate AI review.");
+      }
+
+      setResult(data);
+    } catch (error) {
+      setResult(null);
+      setError(
+        error instanceof Error ? error.message : "Something went wrong.",
+      );
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
   return (
     <main className="min-h-screen bg-background px-4 py-5 text-white sm:px-6 lg:px-8">
@@ -138,8 +125,13 @@ async function handleSubmit(event: FormEvent<HTMLFormElement>) {
           <header className="border-b border-white/10 px-5 py-4 sm:px-6 lg:px-8">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-4">
-                <div className="flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 shadow-inner shadow-white/[0.04]">
-                  <GitBranch className="size-5 text-white" />
+                <div className="flex h-11 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-2 shadow-inner shadow-white/[0.04]">
+                  <Image
+                    src={codeCriticLogo}
+                    alt="CodeCritic AI logo"
+                    className="h-auto max-h-7 w-auto object-contain"
+                    priority
+                  />
                 </div>
                 <div>
                   <p className="text-sm font-semibold tracking-tight text-white">

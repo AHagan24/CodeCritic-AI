@@ -12,7 +12,7 @@ export interface ReviewIssue {
 export type ReviewStatus = "Completed" | "Needs Attention" | "Queued";
 
 export interface ReviewResponse {
-  score?: number;
+  score: number;
   summary: string;
   issues: ReviewIssue[];
   improvedCode: string;

@@ -3,6 +3,7 @@ import { openai } from "../../lib/openai";
 import type { ReviewResponse } from "../../types/review";
 
 const mockResponse: ReviewResponse = {
+  score: 78,
   summary:
     "This code is functional, but there are a few areas that could be improved for readability and stability.",
   issues: [
@@ -34,6 +35,13 @@ const reviewSchema = {
     type: "object",
     additionalProperties: false,
     properties: {
+      score: {
+        type: "number",
+        minimum: 0,
+        maximum: 100,
+        description:
+          "Overall code quality score from 0 to 100 based on correctness, readability, maintainability, and risk.",
+      },
       summary: {
         type: "string",
         description: "A concise summary of the overall review.",
@@ -81,7 +89,7 @@ const reviewSchema = {
         description: "An improved version of the submitted code.",
       },
     },
-    required: ["summary", "issues", "improvedCode"],
+    required: ["score", "summary", "issues", "improvedCode"],
   },
 } as const;
 
@@ -93,6 +101,9 @@ function isValidReviewResponse(value: unknown): value is ReviewResponse {
   const review = value as ReviewResponse;
 
   return (
+    typeof review.score === "number" &&
+    review.score >= 0 &&
+    review.score <= 100 &&
     typeof review.summary === "string" &&
     typeof review.improvedCode === "string" &&
     Array.isArray(review.issues) &&
@@ -146,13 +157,14 @@ export async function POST(request: Request) {
         {
           role: "system",
           content:
-            "You are a senior software engineer performing a code review. Be precise, practical, and concise. Focus on actionable feedback.",
+            "You are a senior software engineer performing a code review. Be precise, practical, and concise. Focus on actionable feedback. Include a realistic score from 0 to 100 where 90-100 is excellent, 70-89 is good, 50-69 has moderate issues, and below 50 is poor quality.",
         },
         {
           role: "user",
           content: `Review the following ${language} code for: ${reviewType}.
 
 Return JSON that matches the provided schema.
+Include a realistic numeric score from 0 to 100 for the overall code quality.
 
 Code:
 ${code}`,
