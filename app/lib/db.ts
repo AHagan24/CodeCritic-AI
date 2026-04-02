@@ -32,6 +32,12 @@ export async function connectToDatabase() {
     cached.promise = mongoose.connect(mongoUri);
   }
 
-  cached.conn = await cached.promise;
-  return cached.conn;
+  try {
+    cached.conn = await cached.promise;
+    return cached.conn;
+  } catch (error) {
+    cached.promise = null;
+    cached.conn = null;
+    throw error;
+  }
 }

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { ArrowUpRight, ChevronRight, Minus, Sparkles } from "lucide-react";
 import ReviewForm from "@/components/ReviewForm";
@@ -79,8 +79,12 @@ export default function Dashboard() {
   const [error, setError] = useState("");
   const [result, setResult] = useState<ReviewResponse | null>(null);
   const [recentReviews, setRecentReviews] = useState<ReviewHistoryItem[]>([]);
+  const recentReviewsRequestIdRef = useRef(0);
 
   async function loadRecentReviews() {
+    const requestId = recentReviewsRequestIdRef.current + 1;
+    recentReviewsRequestIdRef.current = requestId;
+
     try {
       setHistoryLoading(true);
 
@@ -91,17 +95,29 @@ export default function Dashboard() {
       }
 
       const data = (await response.json()) as ReviewHistoryItem[];
-      setRecentReviews(data);
+
+      if (requestId === recentReviewsRequestIdRef.current) {
+        setRecentReviews(data);
+      }
     } catch (error) {
       console.error("Review history error:", error);
-      setRecentReviews([]);
+
+      if (requestId === recentReviewsRequestIdRef.current) {
+        setRecentReviews([]);
+      }
     } finally {
-      setHistoryLoading(false);
+      if (requestId === recentReviewsRequestIdRef.current) {
+        setHistoryLoading(false);
+      }
     }
   }
 
   useEffect(() => {
     void loadRecentReviews();
+
+    return () => {
+      recentReviewsRequestIdRef.current += 1;
+    };
   }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {

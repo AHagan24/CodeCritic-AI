@@ -192,7 +192,13 @@ export async function GET() {
     return NextResponse.json(recentReviews);
   } catch (error) {
     console.error("Recent reviews error:", error);
-    return NextResponse.json([], { status: 200 });
+    return NextResponse.json(
+      {
+        error: "Failed to fetch recent reviews",
+        details: String(error),
+      },
+      { status: 500 },
+    );
   }
 }
 
@@ -219,9 +225,17 @@ export async function POST(request: Request) {
       );
     }
 
-    // Keep public/deployed usage from burning your credits.
-    if (!process.env.OPENAI_API_KEY || process.env.NODE_ENV === "production") {
+    // Keep local/dev usage from burning your credits.
+    if (!process.env.OPENAI_API_KEY && process.env.NODE_ENV !== "production") {
       return getMockReviewResponse();
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      console.error("AI review error: OPENAI_API_KEY is not configured.");
+      return NextResponse.json(
+        { error: "AI review service is not configured." },
+        { status: 500 },
+      );
     }
 
     const completion = await openai.chat.completions.create({
