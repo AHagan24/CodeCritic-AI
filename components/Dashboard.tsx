@@ -89,27 +89,47 @@ export default function Dashboard() {
   const [reviewType, setReviewType] = useState("Full Review");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<ReviewResponse | null>(
-    getMockReview("TypeScript", "Full Review"),
-  );
+const [result, setResult] = useState<ReviewResponse | null>(null);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError("");
+async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  event.preventDefault();
+  setError("");
 
-    if (!code.trim()) {
-      setResult(null);
-      setError("Paste a code snippet to generate a mock AI review.");
-      return;
-    }
+  if (!code.trim()) {
+    setResult(null);
+    setError("Paste a code snippet to generate a review.");
+    return;
+  }
 
+  try {
     setLoading(true);
 
-    window.setTimeout(() => {
-      setResult(getMockReview(language, reviewType));
-      setLoading(false);
-    }, 900);
+    const response = await fetch("/api/review", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        code,
+        language,
+        reviewType,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to generate AI review.");
+    }
+
+    setResult(data);
+  } catch (error) {
+    setResult(null);
+    setError(error instanceof Error ? error.message : "Something went wrong.");
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <main className="min-h-screen bg-background px-4 py-5 text-white sm:px-6 lg:px-8">
