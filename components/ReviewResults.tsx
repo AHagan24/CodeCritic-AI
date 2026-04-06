@@ -7,6 +7,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { ReviewResponse } from "@/app/types/review";
+import CopyCodeButton from "@/components/CopyCodeButton";
 import SeverityBadge from "@/components/SeverityBadge";
 
 interface ReviewResultsProps {
@@ -261,9 +262,12 @@ function ReviewResults({
                   <span className="size-2 rounded-full bg-amber-400" />
                   <span className="size-2 rounded-full bg-emerald-400" />
                 </div>
-                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                  {result.language ?? "Not specified"}
-                </span>
+                <div className="flex items-center gap-3">
+                  <CopyCodeButton code={result.improvedCode} />
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                    {result.language ?? "Not specified"}
+                  </span>
+                </div>
               </div>
               <pre className="overflow-x-auto p-4 text-[13px] leading-6 text-zinc-200">
                 <code>{result.improvedCode}</code>
