@@ -5,32 +5,6 @@ import { connectToDatabase } from "../../lib/db";
 import Review from "../../models/Review";
 import type { ReviewHistoryItem } from "../../types/review";
 
-const mockResponse: ReviewResponse = {
-  score: 78,
-  summary:
-    "This code is functional, but there are a few areas that could be improved for readability and stability.",
-  issues: [
-    {
-      title: "Missing input validation",
-      description:
-        "The function assumes the input is always valid and does not guard against unexpected values.",
-      severity: "high",
-      lineReference: "Line 1-3",
-      suggestion: "Add validation checks before processing the input.",
-    },
-    {
-      title: "Low readability",
-      description:
-        "Variable names are vague and make the code harder to understand.",
-      severity: "medium",
-      lineReference: "Line 2",
-      suggestion: "Rename variables to reflect their actual purpose.",
-    },
-  ],
-  improvedCode:
-    'function getUserName(user) {\n  if (!user?.name) return "";\n  return user.name.toUpperCase();\n}',
-};
-
 const reviewSchema = {
   name: "code_review",
   strict: true,
@@ -120,10 +94,6 @@ function isValidReviewResponse(value: unknown): value is ReviewResponse {
         typeof issue.suggestion === "string",
     )
   );
-}
-
-function getMockReviewResponse() {
-  return NextResponse.json(mockResponse);
 }
 
 function getReviewStatus(score: number): ReviewHistoryItem["status"] {
@@ -227,7 +197,10 @@ export async function POST(request: Request) {
 
     // Keep local/dev usage from burning your credits.
     if (!process.env.OPENAI_API_KEY && process.env.NODE_ENV !== "production") {
-      return getMockReviewResponse();
+      return NextResponse.json(
+        { error: "AI review service is not configured." },
+        { status: 503 },
+      );
     }
 
     if (!process.env.OPENAI_API_KEY) {
@@ -267,14 +240,20 @@ ${code}`,
 
     if (!output) {
       console.error("AI review error: No AI response was returned.");
-      return getMockReviewResponse();
+      return NextResponse.json(
+        { error: "No AI review was returned." },
+        { status: 502 },
+      );
     }
 
     const parsed = parseReviewResponse(output);
 
     if (!parsed) {
       console.error("AI review error: AI returned an invalid review format.");
-      return getMockReviewResponse();
+      return NextResponse.json(
+        { error: "AI review returned an invalid response." },
+        { status: 502 },
+      );
     }
 
     await connectToDatabase();
@@ -289,17 +268,27 @@ ${code}`,
       improvedCode: parsed.improvedCode,
     });
 
-    return NextResponse.json(parsed);
+    return NextResponse.json({
+      ...parsed,
+      language,
+      reviewType,
+    });
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown OpenAI error";
 
     if (errorMessage.includes("insufficient_quota")) {
       console.error("AI review error: insufficient_quota", error);
-      return getMockReviewResponse();
+      return NextResponse.json(
+        { error: "AI review quota has been exceeded." },
+        { status: 503 },
+      );
     }
 
     console.error("AI review error:", error);
-    return getMockReviewResponse();
+    return NextResponse.json(
+      { error: "Failed to generate AI review." },
+      { status: 500 },
+    );
   }
 }

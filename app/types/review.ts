@@ -29,3 +29,16 @@ export interface ReviewHistoryItem {
   date: string;
   status: ReviewStatus;
 }
+
+export interface LanguageReviewCount {
+  language: string;
+  count: number;
+}
+
+export interface DashboardSummary {
+  totalReviews: number;
+  averageScore: number | null;
+  languagesReviewed: LanguageReviewCount[];
+  recentReviews: ReviewHistoryItem[];
+  latestReview: ReviewHistoryItem | null;
+}

@@ -125,10 +125,10 @@ function ReviewResults({
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1.5 text-sm text-zinc-200">
-                  {result.language ?? "TypeScript"}
+                  {result.language ?? "Not specified"}
                 </span>
                 <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1.5 text-sm text-zinc-200">
-                  {result.reviewType ?? "Full Review"}
+                  {result.reviewType ?? "Not specified"}
                 </span>
               </div>
               <p className="mt-3 text-sm text-zinc-400">
@@ -262,7 +262,7 @@ function ReviewResults({
                   <span className="size-2 rounded-full bg-emerald-400" />
                 </div>
                 <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                  {result.language ?? "TypeScript"}
+                  {result.language ?? "Not specified"}
                 </span>
               </div>
               <pre className="overflow-x-auto p-4 text-[13px] leading-6 text-zinc-200">
