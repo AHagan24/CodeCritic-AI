@@ -10,6 +10,7 @@ import {
 import mongoose from "mongoose";
 import { connectToDatabase } from "@/app/lib/db";
 import Review from "@/app/models/Review";
+import CopyCodeButton from "@/components/CopyCodeButton";
 import SeverityBadge from "@/components/SeverityBadge";
 
 interface ReviewDetailsPageProps {
@@ -161,12 +162,17 @@ export default async function ReviewDetailsPage({
           </div>
 
           <article className="rounded-[28px] border border-white/10 bg-[#0f0f12] p-6">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
-              Improved Code
-            </p>
-            <h2 className="mt-2 text-xl font-semibold text-white">
-              Suggested rewrite
-            </h2>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
+                  Improved Code
+                </p>
+                <h2 className="mt-2 text-xl font-semibold text-white">
+                  Suggested rewrite
+                </h2>
+              </div>
+              <CopyCodeButton code={review.improvedCode} />
+            </div>
 
             <pre className="mt-5 overflow-x-auto rounded-[22px] border border-white/10 bg-[#09090b] p-4 text-[13px] leading-6 text-zinc-200">
               <code>{review.improvedCode}</code>
