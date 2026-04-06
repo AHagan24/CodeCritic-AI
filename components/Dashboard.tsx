@@ -4,24 +4,56 @@ import Image from "next/image";
 import Link from "next/link";
 import { memo, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { ArrowUpRight, ChevronRight, Minus, Sparkles } from "lucide-react";
+import {
+  ArrowUpRight,
+  Bot,
+  ChartColumn,
+  ChevronRight,
+  Clock3,
+  FolderCode,
+  LayoutDashboard,
+  Settings,
+  Sparkles,
+  Star,
+} from "lucide-react";
 import ReviewForm from "@/components/ReviewForm";
 import ReviewResults from "@/components/ReviewResults";
-import {
-  activity,
-  activityHeights,
-  categories,
-  defaultCode,
-  languageDistribution,
-  navItems,
-  stats,
-} from "@/components/dashboard/mockData";
 import type {
+  DashboardSummary,
   ReviewHistoryItem,
   ReviewResponse,
   ReviewStatus,
 } from "@/app/types/review";
 import codeCriticLogo from "../assets/CodeCriticLogo.png";
+
+const defaultCode = `export async function getUserProfile(userId: string) {
+  const response = await fetch("/api/users/" + userId);
+  const user = await response.json();
+
+  if (user.isAdmin == true) {
+    console.log("admin user");
+  }
+
+  return {
+    name: user.name,
+    projects: user.projects.map((project: any) => project.title),
+  };
+}`;
+
+const navItems = [
+  { label: "Dashboard", icon: LayoutDashboard, active: true },
+  { label: "Reviews", icon: Bot, active: false },
+  { label: "History", icon: Clock3, active: false },
+  { label: "Settings", icon: Settings, active: false },
+];
+
+const emptyDashboardSummary: DashboardSummary = {
+  totalReviews: 0,
+  averageScore: null,
+  languagesReviewed: [],
+  recentReviews: [],
+  latestReview: null,
+};
 
 function getStatusClassName(status: ReviewStatus) {
   if (status === "Completed") {
@@ -33,6 +65,14 @@ function getStatusClassName(status: ReviewStatus) {
   }
 
   return "border-sky-500/20 bg-sky-500/10 text-sky-200";
+}
+
+function formatAverageScore(score: number | null) {
+  if (score === null) {
+    return "N/A";
+  }
+
+  return score.toFixed(1);
 }
 
 const DashboardNav = memo(function DashboardNav() {
@@ -56,17 +96,30 @@ const DashboardNav = memo(function DashboardNav() {
   );
 });
 
-const ActivityBars = memo(function ActivityBars() {
+type DashboardStatCardProps = {
+  label: string;
+  value: string;
+  description: string;
+  icon: typeof ChartColumn;
+};
+
+const DashboardStatCard = memo(function DashboardStatCard({
+  label,
+  value,
+  description,
+  icon: Icon,
+}: DashboardStatCardProps) {
   return (
-    <div className="mt-6 flex h-24 items-end gap-2">
-      {activityHeights.map((height, index) => (
-        <div
-          key={index}
-          className="flex-1 rounded-t-full bg-[linear-gradient(180deg,rgba(244,244,245,0.88),rgba(56,189,248,0.16))]"
-          style={{ height: `${height}px` }}
-        />
-      ))}
-    </div>
+    <article className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(17,17,20,0.98),rgba(11,11,14,0.96))] p-5">
+      <div className="flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-zinc-100">
+        <Icon className="size-5" />
+      </div>
+      <p className="mt-5 text-sm text-zinc-400">{label}</p>
+      <p className="mt-2 text-2xl font-semibold tracking-tight text-white">
+        {value}
+      </p>
+      <p className="mt-2 text-sm text-zinc-500">{description}</p>
+    </article>
   );
 });
 
@@ -75,48 +128,53 @@ export default function Dashboard() {
   const [language, setLanguage] = useState("TypeScript");
   const [reviewType, setReviewType] = useState("Full Review");
   const [loading, setLoading] = useState(false);
-  const [historyLoading, setHistoryLoading] = useState(true);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState("");
   const [error, setError] = useState("");
   const [result, setResult] = useState<ReviewResponse | null>(null);
-  const [recentReviews, setRecentReviews] = useState<ReviewHistoryItem[]>([]);
-  const recentReviewsRequestIdRef = useRef(0);
+  const [dashboardSummary, setDashboardSummary] = useState<DashboardSummary>(
+    emptyDashboardSummary,
+  );
+  const dashboardRequestIdRef = useRef(0);
 
-  async function loadRecentReviews() {
-    const requestId = recentReviewsRequestIdRef.current + 1;
-    recentReviewsRequestIdRef.current = requestId;
+  async function loadDashboardData() {
+    const requestId = dashboardRequestIdRef.current + 1;
+    dashboardRequestIdRef.current = requestId;
 
     try {
-      setHistoryLoading(true);
+      setDashboardLoading(true);
+      setDashboardError("");
 
-      const response = await fetch("/api/review");
+      const response = await fetch("/api/review/dashboard");
 
       if (!response.ok) {
-        throw new Error("Failed to load review history.");
+        throw new Error("Failed to load dashboard data.");
       }
 
-      const data = (await response.json()) as ReviewHistoryItem[];
+      const data = (await response.json()) as DashboardSummary;
 
-      if (requestId === recentReviewsRequestIdRef.current) {
-        setRecentReviews(data);
+      if (requestId === dashboardRequestIdRef.current) {
+        setDashboardSummary(data);
       }
-    } catch (error) {
-      console.error("Review history error:", error);
+    } catch (loadError) {
+      console.error("Dashboard data error:", loadError);
 
-      if (requestId === recentReviewsRequestIdRef.current) {
-        setRecentReviews([]);
+      if (requestId === dashboardRequestIdRef.current) {
+        setDashboardSummary(emptyDashboardSummary);
+        setDashboardError("Dashboard data is unavailable right now.");
       }
     } finally {
-      if (requestId === recentReviewsRequestIdRef.current) {
-        setHistoryLoading(false);
+      if (requestId === dashboardRequestIdRef.current) {
+        setDashboardLoading(false);
       }
     }
   }
 
   useEffect(() => {
-    void loadRecentReviews();
+    void loadDashboardData();
 
     return () => {
-      recentReviewsRequestIdRef.current += 1;
+      dashboardRequestIdRef.current += 1;
     };
   }, []);
 
@@ -150,23 +208,66 @@ export default function Dashboard() {
         }),
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as ReviewResponse | { error?: string };
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to generate AI review.");
+        throw new Error(
+          (data as { error?: string }).error || "Failed to generate AI review."
+        );
       }
 
-      setResult(data);
-      await loadRecentReviews();
-    } catch (error) {
+      setResult(data as ReviewResponse);
+      await loadDashboardData();
+    } catch (submitError) {
       setResult(null);
       setError(
-        error instanceof Error ? error.message : "Something went wrong.",
+        submitError instanceof Error
+          ? submitError.message
+          : "Something went wrong.",
       );
     } finally {
       setLoading(false);
     }
   }
+
+  const latestReview = dashboardSummary.latestReview;
+  const languagesReviewed = dashboardSummary.languagesReviewed;
+  const topLanguage = languagesReviewed[0]?.language ?? "None yet";
+  const statCards = [
+    {
+      label: "Reviews Saved",
+      value: dashboardSummary.totalReviews.toString(),
+      description: "Stored in MongoDB review history",
+      icon: ChartColumn,
+    },
+    {
+      label: "Average Score",
+      value: formatAverageScore(dashboardSummary.averageScore),
+      description:
+        dashboardSummary.averageScore === null
+          ? "No completed reviews yet"
+          : "Across all saved reviews",
+      icon: Star,
+    },
+    {
+      label: "Languages Reviewed",
+      value: languagesReviewed.length.toString(),
+      description:
+        languagesReviewed.length === 0
+          ? "Waiting for the first saved review"
+          : "Unique languages in review history",
+      icon: FolderCode,
+    },
+    {
+      label: "Most Reviewed Language",
+      value: topLanguage,
+      description:
+        languagesReviewed[0]?.count !== undefined
+          ? `${languagesReviewed[0].count} saved review${languagesReviewed[0].count === 1 ? "" : "s"}`
+          : "No language data yet",
+      icon: Bot,
+    },
+  ];
 
   return (
     <main className="min-h-screen bg-background px-4 py-5 text-white sm:px-6 lg:px-8">
@@ -247,77 +348,119 @@ export default function Dashboard() {
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
-                        Review Activity
+                        Review Overview
                       </p>
                       <h2 className="mt-2 text-lg font-semibold text-white">
-                        Weekly throughput is trending up
+                        Real dashboard metrics
                       </h2>
                     </div>
-                    <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-200">
-                      +14%
-                    </span>
+                    <ChartColumn className="size-5 text-zinc-500" />
                   </div>
 
-                  <ActivityBars />
+                  {dashboardLoading ? (
+                    <p className="mt-6 text-sm text-zinc-500">
+                      Loading dashboard metrics...
+                    </p>
+                  ) : dashboardSummary.totalReviews === 0 ? (
+                    <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-4">
+                      <p className="text-sm font-medium text-white">
+                        No saved reviews yet
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-zinc-400">
+                        Run your first review to populate counts, average score,
+                        and language coverage here.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                      <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                          Total Reviews
+                        </p>
+                        <p className="mt-2 text-3xl font-semibold text-white">
+                          {dashboardSummary.totalReviews}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                          Average Score
+                        </p>
+                        <p className="mt-2 text-3xl font-semibold text-white">
+                          {formatAverageScore(dashboardSummary.averageScore)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
-                  <p className="mt-4 text-sm leading-6 text-zinc-400">
-                    Critical findings are stabilizing while review volume
-                    continues climbing across TypeScript-heavy submissions.
-                  </p>
+                  {dashboardError ? (
+                    <p className="mt-4 text-sm text-amber-200">{dashboardError}</p>
+                  ) : null}
                 </article>
 
                 <article className="rounded-[30px] border border-white/10 bg-[#0f0f12] p-6">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
-                        Activity Feed
+                        Latest Saved Review
                       </p>
                       <h2 className="mt-2 text-lg font-semibold text-white">
-                        Workspace pulse
+                        Most recent result
                       </h2>
                     </div>
-                    <Minus className="size-4 text-zinc-600" />
+                    <Clock3 className="size-5 text-zinc-500" />
                   </div>
 
-                  <div className="mt-5 space-y-3">
-                    {activity.map((item) => (
-                      <div
-                        key={item}
-                        className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.045] px-4 py-3"
-                      >
-                        <span className="mt-1 size-2 rounded-full bg-sky-300" />
-                        <p className="text-sm leading-6 text-zinc-300">
-                          {item}
-                        </p>
+                  {dashboardLoading ? (
+                    <p className="mt-5 text-sm text-zinc-500">
+                      Loading latest review...
+                    </p>
+                  ) : latestReview ? (
+                    <Link
+                      href={`/reviews/${latestReview.id}`}
+                      className="mt-5 block rounded-2xl border border-white/10 bg-white/[0.045] p-4 transition-colors hover:bg-white/[0.06]"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="font-medium text-white">{latestReview.name}</p>
+                        <span
+                          className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${getStatusClassName(
+                            latestReview.status,
+                          )}`}
+                        >
+                          {latestReview.status}
+                        </span>
                       </div>
-                    ))}
-                  </div>
+                      <p className="mt-3 text-sm text-zinc-400">
+                        {latestReview.language} / {latestReview.reviewType}
+                      </p>
+                      <div className="mt-4 flex items-center justify-between text-sm text-zinc-400">
+                        <span>Score {latestReview.score}</span>
+                        <span>{latestReview.date}</span>
+                      </div>
+                    </Link>
+                  ) : (
+                    <div className="mt-5 rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-4">
+                      <p className="text-sm font-medium text-white">
+                        Nothing to show yet
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-zinc-400">
+                        Saved review previews will appear here after the first
+                        successful run.
+                      </p>
+                    </div>
+                  )}
                 </article>
               </div>
             </section>
 
             <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {stats.map((stat) => (
-                <article
+              {statCards.map((stat) => (
+                <DashboardStatCard
                   key={stat.label}
-                  className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(17,17,20,0.98),rgba(11,11,14,0.96))] p-5"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-zinc-100">
-                      <stat.icon className="size-5" />
-                    </div>
-                    <span className="rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[11px] font-medium text-zinc-300">
-                      {stat.delta}
-                    </span>
-                  </div>
-                  <p className="mt-5 text-sm text-zinc-400">{stat.label}</p>
-                  <p className="mt-2 text-2xl font-semibold tracking-tight text-white">
-                    {stat.value}
-                  </p>
-                  <p className="mt-2 text-sm text-zinc-500">
-                    {stat.description}
-                  </p>
-                </article>
+                  label={stat.label}
+                  value={stat.value}
+                  description={stat.description}
+                  icon={stat.icon}
+                />
               ))}
             </section>
 
@@ -360,10 +503,7 @@ export default function Dashboard() {
                       <ChevronRight className="size-3.5" />
                     </Link>
                     <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-zinc-300">
-                      All Languages
-                    </span>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-zinc-300">
-                      Last 7 Days
+                      {dashboardSummary.totalReviews} saved
                     </span>
                   </div>
                 </div>
@@ -379,16 +519,16 @@ export default function Dashboard() {
                   </div>
 
                   <div className="divide-y divide-white/10">
-                    {historyLoading ? (
+                    {dashboardLoading ? (
                       <div className="bg-[#0a0a0d] px-4 py-8 text-sm text-zinc-500">
                         Loading recent reviews...
                       </div>
-                    ) : recentReviews.length === 0 ? (
+                    ) : dashboardSummary.recentReviews.length === 0 ? (
                       <div className="bg-[#0a0a0d] px-4 py-8 text-sm text-zinc-500">
                         No saved reviews yet.
                       </div>
                     ) : (
-                      recentReviews.map((review) => (
+                      dashboardSummary.recentReviews.map((review: ReviewHistoryItem) => (
                         <Link
                           key={review.id}
                           href={`/reviews/${review.id}`}
@@ -399,7 +539,7 @@ export default function Dashboard() {
                               {review.name}
                             </p>
                             <p className="mt-1 text-sm text-zinc-500 md:hidden">
-                              {review.language} · {review.reviewType}
+                              {review.language} / {review.reviewType}
                             </p>
                           </div>
                           <p className="hidden text-sm text-zinc-300 md:block">
@@ -433,61 +573,54 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
-                        Common Issue Categories
+                        Languages Reviewed
                       </p>
                       <h2 className="mt-2 text-lg font-semibold text-white">
-                        Where reviews cluster most
+                        Saved review coverage
                       </h2>
                     </div>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-zinc-400">
-                      Last 30 days
-                    </span>
+                    <FolderCode className="size-5 text-zinc-500" />
                   </div>
 
-                  <div className="mt-5 space-y-4">
-                    {categories.map((category) => (
-                      <div key={category.name}>
-                        <div className="flex items-center justify-between gap-3 text-sm">
-                          <span className="text-zinc-300">{category.name}</span>
-                          <span className="text-zinc-500">
-                            {category.count}
-                          </span>
+                  {dashboardLoading ? (
+                    <p className="mt-5 text-sm text-zinc-500">
+                      Loading language coverage...
+                    </p>
+                  ) : languagesReviewed.length === 0 ? (
+                    <div className="mt-5 rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-4">
+                      <p className="text-sm font-medium text-white">
+                        No languages reviewed yet
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-zinc-400">
+                        Language coverage appears automatically once reviews have
+                        been saved.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mt-5 space-y-4">
+                      {languagesReviewed.map((entry) => (
+                        <div key={entry.language}>
+                          <div className="flex items-center justify-between gap-3 text-sm">
+                            <span className="text-zinc-300">{entry.language}</span>
+                            <span className="text-zinc-500">
+                              {entry.count} review{entry.count === 1 ? "" : "s"}
+                            </span>
+                          </div>
+                          <div className="mt-2 h-2 rounded-full bg-white/8">
+                            <div
+                              className="h-2 rounded-full bg-[linear-gradient(90deg,rgba(244,244,245,0.95),rgba(56,189,248,0.45))]"
+                              style={{
+                                width: `${Math.max(
+                                  (entry.count / dashboardSummary.totalReviews) * 100,
+                                  8,
+                                )}%`,
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div className="mt-2 h-2 rounded-full bg-white/8">
-                          <div
-                            className="h-2 rounded-full bg-[linear-gradient(90deg,rgba(244,244,245,0.95),rgba(56,189,248,0.45))]"
-                            style={{ width: `${category.count * 5}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </article>
-
-                <article className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.98),rgba(11,11,14,0.96))] p-6">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
-                    Language Distribution
-                  </p>
-                  <h2 className="mt-2 text-lg font-semibold text-white">
-                    Review mix by stack
-                  </h2>
-
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {languageDistribution.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-300"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  <p className="mt-4 text-sm leading-6 text-zinc-400">
-                    TypeScript service-layer code still drives the highest
-                    volume, with Python utilities and Go handlers following
-                    behind.
-                  </p>
+                      ))}
+                    </div>
+                  )}
                 </article>
               </div>
             </section>

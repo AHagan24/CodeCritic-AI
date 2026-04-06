@@ -44,7 +44,7 @@ const featureCards = [
   {
     icon: Sparkles,
     label: "Workflow",
-    value: "Mocked client review flow with production-style UX",
+    value: "Structured AI review flow with production-style UX",
   },
 ];
 
@@ -87,7 +87,9 @@ export default function ReviewForm({
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sky-100/80">
             Session
           </p>
-          <p className="mt-2 text-sm font-medium text-sky-50">Demo workspace</p>
+          <p className="mt-2 text-sm font-medium text-sky-50">
+            Personal workspace
+          </p>
         </div>
       </div>
 
@@ -208,10 +210,10 @@ export default function ReviewForm({
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-white/10 bg-white/[0.045] px-4 py-3">
             <div>
               <p className="text-sm font-medium text-zinc-200">
-                Reviews are simulated on the client
+                Reviews are saved after successful analysis
               </p>
               <p className="mt-1 text-sm text-zinc-500">
-                The UI is production-style today and ready for backend wiring later.
+                Generated results come from the review API and are stored in your history.
               </p>
             </div>
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/15 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-200">
