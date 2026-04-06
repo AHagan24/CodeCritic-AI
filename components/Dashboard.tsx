@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { memo, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
@@ -11,8 +10,6 @@ import {
   ChevronRight,
   Clock3,
   FolderCode,
-  LayoutDashboard,
-  Settings,
   Sparkles,
   Star,
 } from "lucide-react";
@@ -24,7 +21,6 @@ import type {
   ReviewResponse,
   ReviewStatus,
 } from "@/app/types/review";
-import codeCriticLogo from "../assets/CodeCriticLogo.png";
 
 const defaultCode = `export async function getUserProfile(userId: string) {
   const response = await fetch("/api/users/" + userId);
@@ -39,13 +35,6 @@ const defaultCode = `export async function getUserProfile(userId: string) {
     projects: user.projects.map((project: any) => project.title),
   };
 }`;
-
-const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, active: true },
-  { label: "Reviews", icon: Bot, active: false },
-  { label: "History", icon: Clock3, active: false },
-  { label: "Settings", icon: Settings, active: false },
-];
 
 const emptyDashboardSummary: DashboardSummary = {
   totalReviews: 0,
@@ -74,27 +63,6 @@ function formatAverageScore(score: number | null) {
 
   return score.toFixed(1);
 }
-
-const DashboardNav = memo(function DashboardNav() {
-  return (
-    <nav className="flex flex-wrap items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1">
-      {navItems.map((item) => (
-        <Link
-          key={item.label}
-          href={item.label === "History" ? "/history" : "#"}
-          className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm duration-150 transition-colors ${
-            item.active
-              ? "bg-white text-black shadow-[0_6px_18px_rgba(255,255,255,0.06)]"
-              : "text-zinc-400 hover:bg-white/5 hover:text-white"
-          }`}
-        >
-          <item.icon className="size-4" />
-          {item.label}
-        </Link>
-      ))}
-    </nav>
-  );
-});
 
 type DashboardStatCardProps = {
   label: string;
@@ -212,7 +180,7 @@ export default function Dashboard() {
 
       if (!response.ok) {
         throw new Error(
-          (data as { error?: string }).error || "Failed to generate AI review."
+          (data as { error?: string }).error || "Failed to generate AI review.",
         );
       }
 
@@ -270,52 +238,18 @@ export default function Dashboard() {
   ];
 
   return (
-    <main className="min-h-screen bg-background px-4 py-5 text-white sm:px-6 lg:px-8">
+    <main className="bg-background px-4 py-6 text-white sm:px-6 lg:px-8 lg:py-8">
       <div className="mx-auto max-w-7xl">
-        <div className="rounded-[32px] border border-white/10 bg-[rgba(9,9,11,0.9)] shadow-lg">
-          <header className="border-b border-white/10 px-5 py-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex h-11 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-2 shadow-inner shadow-white/[0.04]">
-                  <Image
-                    src={codeCriticLogo}
-                    alt="CodeCritic AI logo"
-                    className="h-auto max-h-7 w-auto object-contain"
-                    priority
-                  />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold tracking-tight text-white">
-                    CodeCritic AI
-                  </p>
-                  <p className="text-sm text-zinc-500">
-                    AI review workspace for shipping better code
-                  </p>
-                </div>
-              </div>
-
-              <DashboardNav />
-
-              <div className="flex items-center gap-3">
-                <div className="hidden rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-zinc-400 md:block">
-                  Workspace: Personal Sandbox
-                </div>
-                <div className="flex size-10 items-center justify-center rounded-full border border-white/10 bg-[linear-gradient(135deg,#f4f4f5,#71717a)] text-sm font-semibold text-black">
-                  AC
-                </div>
-              </div>
-            </div>
-          </header>
-
+        <div className="rounded-[32px] border border-white/10 bg-[rgba(9,9,11,0.88)] shadow-lg">
           <div className="px-5 py-6 sm:px-6 lg:px-8 lg:py-8">
             <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-              <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.95),rgba(11,11,14,0.92))] p-6 shadow-md">
+              <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.95),rgba(11,11,14,0.92))] p-6 shadow-md sm:p-7">
                 <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1.5 text-[11px] font-medium text-sky-100">
                   <Sparkles className="size-3.5" />
                   AI-Powered Developer Tool
                 </div>
 
-                <h1 className="mt-5 max-w-2xl text-4xl font-semibold tracking-tight text-white sm:text-[3.25rem]">
+                <h1 className="mt-5 max-w-2xl text-4xl font-semibold tracking-tight text-white sm:text-[3.1rem]">
                   Your AI Code Reviewer
                 </h1>
 
@@ -328,14 +262,14 @@ export default function Dashboard() {
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   <Link
                     href="#workspace-form"
-                    className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black duration-150 transition-colors hover:bg-zinc-200"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black transition-colors hover:bg-zinc-200"
                   >
                     Run New Review
                     <ArrowUpRight className="size-4" />
                   </Link>
                   <Link
                     href="/history"
-                    className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-zinc-200 duration-150 transition-colors hover:bg-white/10"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/10"
                   >
                     View Review History
                     <ChevronRight className="size-4" />
@@ -483,7 +417,7 @@ export default function Dashboard() {
               id="recent-reviews"
               className="mt-8 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]"
             >
-              <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.98),rgba(11,11,14,0.96))] p-6">
+              <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.98),rgba(11,11,14,0.96))] p-6 sm:p-7">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
@@ -535,9 +469,7 @@ export default function Dashboard() {
                           className="grid gap-3 bg-[#0a0a0d] px-4 py-4 transition-colors hover:bg-white/[0.03] md:grid-cols-[1.5fr_0.9fr_1fr_0.75fr_0.85fr_0.9fr] md:items-center"
                         >
                           <div>
-                            <p className="font-medium text-white">
-                              {review.name}
-                            </p>
+                            <p className="font-medium text-white">{review.name}</p>
                             <p className="mt-1 text-sm text-zinc-500 md:hidden">
                               {review.language} / {review.reviewType}
                             </p>

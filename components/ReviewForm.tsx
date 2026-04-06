@@ -1,4 +1,5 @@
 "use client";
+
 import Editor from "@monaco-editor/react";
 import type { FormEvent } from "react";
 import {
@@ -49,7 +50,7 @@ const featureCards = [
 ];
 
 function fieldClassName() {
-  return "w-full appearance-none rounded-2xl border border-white/10 bg-[#0d0d10] px-4 py-3.5 text-sm text-zinc-100 outline-none duration-150 transition-[background-color,border-color,box-shadow] placeholder:text-zinc-600 focus:border-white/20 focus:bg-[#0b0b0e] focus:ring-2 focus:ring-white/5";
+  return "h-12 w-full appearance-none rounded-2xl border border-white/10 bg-[#0d0d10] px-4 text-sm text-zinc-100 outline-none transition-[background-color,border-color,box-shadow] placeholder:text-zinc-600 focus:border-white/20 focus:bg-[#0b0b0e] focus:ring-2 focus:ring-white/5";
 }
 
 export default function ReviewForm({
@@ -66,7 +67,7 @@ export default function ReviewForm({
   return (
     <section
       id="workspace-form"
-      className="rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.98),rgba(11,11,14,0.96))] p-6 shadow-[0_14px_44px_rgba(0,0,0,0.28)]"
+      className="rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.98),rgba(11,11,14,0.96))] p-6 shadow-[0_14px_44px_rgba(0,0,0,0.28)] sm:p-7"
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -93,7 +94,7 @@ export default function ReviewForm({
         </div>
       </div>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
+      <div className="mt-6 grid gap-3 lg:grid-cols-3">
         {featureCards.map((item) => (
           <div
             key={item.label}
@@ -111,7 +112,7 @@ export default function ReviewForm({
       </div>
 
       <form onSubmit={onSubmit} className="mt-6 space-y-5">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2">
           <label className="block">
             <span className="mb-2.5 block text-sm font-medium text-zinc-300">
               Language
@@ -173,8 +174,8 @@ export default function ReviewForm({
               </span>
             </div>
 
-            <div>
-              <div className="mb-2 block text-sm text-zinc-300">Code</div>
+            <div className="p-3 sm:p-4">
+              <div className="mb-3 block text-sm text-zinc-300">Code</div>
 
               <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b0f]">
                 <Editor
@@ -223,11 +224,11 @@ export default function ReviewForm({
           </div>
         )}
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black duration-150 transition-colors hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black transition-colors hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Running Review..." : "Run AI Review"}
           </button>

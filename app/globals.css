@@ -46,6 +46,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+a,
+button,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
 ::selection {
   background: rgba(255, 255, 255, 0.16);
   color: #ffffff;
