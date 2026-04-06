@@ -39,9 +39,9 @@ const DashboardNav = memo(function DashboardNav() {
   return (
     <nav className="flex flex-wrap items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1">
       {navItems.map((item) => (
-        <button
+        <Link
           key={item.label}
-          type="button"
+          href={item.label === "History" ? "/history" : "#"}
           className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm duration-150 transition-colors ${
             item.active
               ? "bg-white text-black shadow-[0_6px_18px_rgba(255,255,255,0.06)]"
@@ -50,7 +50,7 @@ const DashboardNav = memo(function DashboardNav() {
         >
           <item.icon className="size-4" />
           {item.label}
-        </button>
+        </Link>
       ))}
     </nav>
   );
@@ -188,7 +188,7 @@ export default function Dashboard() {
                     CodeCritic AI
                   </p>
                   <p className="text-sm text-zinc-500">
-                    Premium AI review workspace for shipping better code
+                    AI review workspace for shipping better code
                   </p>
                 </div>
               </div>
@@ -233,10 +233,10 @@ export default function Dashboard() {
                     <ArrowUpRight className="size-4" />
                   </Link>
                   <Link
-                    href="#recent-reviews"
+                    href="/history"
                     className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-zinc-200 duration-150 transition-colors hover:bg-white/10"
                   >
-                    View Recent Reviews
+                    View Review History
                     <ChevronRight className="size-4" />
                   </Link>
                 </div>
@@ -351,7 +351,14 @@ export default function Dashboard() {
                     </h2>
                   </div>
 
-                  <div className="flex flex-wrap gap-2 text-xs">
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <Link
+                      href="/history"
+                      className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
+                    >
+                      View all
+                      <ChevronRight className="size-3.5" />
+                    </Link>
                     <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-zinc-300">
                       All Languages
                     </span>
@@ -382,9 +389,10 @@ export default function Dashboard() {
                       </div>
                     ) : (
                       recentReviews.map((review) => (
-                        <article
+                        <Link
                           key={review.id}
-                          className="grid gap-3 bg-[#0a0a0d] px-4 py-4 md:grid-cols-[1.5fr_0.9fr_1fr_0.75fr_0.85fr_0.9fr] md:items-center"
+                          href={`/reviews/${review.id}`}
+                          className="grid gap-3 bg-[#0a0a0d] px-4 py-4 transition-colors hover:bg-white/[0.03] md:grid-cols-[1.5fr_0.9fr_1fr_0.75fr_0.85fr_0.9fr] md:items-center"
                         >
                           <div>
                             <p className="font-medium text-white">
@@ -413,7 +421,7 @@ export default function Dashboard() {
                               {review.status}
                             </span>
                           </div>
-                        </article>
+                        </Link>
                       ))
                     )}
                   </div>
