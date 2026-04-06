@@ -47,19 +47,19 @@ export default async function ReviewDetailsPage({
   }
 
   return (
-    <main className="min-h-screen bg-background px-4 py-6 text-white sm:px-6 lg:px-8">
+    <main className="bg-background px-4 py-6 text-white sm:px-6 lg:px-8 lg:py-8">
       <div className="mx-auto max-w-5xl">
         <div className="mb-6">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
+            className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
           >
             <ArrowLeft className="size-4" />
             Back to Dashboard
           </Link>
         </div>
 
-        <section className="rounded-[30px] border border-white/10 bg-[#0f0f12] p-6 shadow-lg">
+        <section className="rounded-[32px] border border-white/10 bg-[#0f0f12] p-6 shadow-lg sm:p-7">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1.5 text-[11px] font-medium text-sky-100">
@@ -68,7 +68,7 @@ export default async function ReviewDetailsPage({
               </div>
 
               <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                {review.language} · {review.reviewType}
+                {review.language} / {review.reviewType}
               </h1>
 
               <div className="mt-4 flex flex-wrap gap-3 text-sm text-zinc-400">
@@ -99,7 +99,7 @@ export default async function ReviewDetailsPage({
           </div>
         </section>
 
-        <section className="mt-6 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+        <section className="mt-6 grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
           <div className="space-y-6">
             <article className="rounded-[28px] border border-white/10 bg-[#0f0f12] p-6">
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
@@ -129,7 +129,7 @@ export default async function ReviewDetailsPage({
                 {review.issues.map((issue, index) => (
                   <article
                     key={`${issue.title}-${index}`}
-                    className="rounded-[22px] border border-white/10 bg-black/20 p-4"
+                    className="rounded-[22px] border border-white/10 bg-black/20 p-4 sm:p-5"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
@@ -174,7 +174,7 @@ export default async function ReviewDetailsPage({
               <CopyCodeButton code={review.improvedCode} />
             </div>
 
-            <pre className="mt-5 overflow-x-auto rounded-[22px] border border-white/10 bg-[#09090b] p-4 text-[13px] leading-6 text-zinc-200">
+            <pre className="mt-5 overflow-x-auto rounded-[22px] border border-white/10 bg-[#09090b] p-4 text-[13px] leading-6 text-zinc-200 sm:p-5">
               <code>{review.improvedCode}</code>
             </pre>
           </article>
