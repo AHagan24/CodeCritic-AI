@@ -1,5 +1,5 @@
 "use client";
-
+import Editor from "@monaco-editor/react";
 import type { FormEvent } from "react";
 import {
   ChevronDown,
@@ -15,7 +15,7 @@ interface ReviewFormProps {
   reviewType: string;
   loading: boolean;
   error: string;
-  onCodeChange: (value: string) => void;
+  onCodeChange: (value: string | undefined) => void;
   onLanguageChange: (value: string) => void;
   onReviewTypeChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -151,7 +151,7 @@ export default function ReviewForm({
           </label>
         </div>
 
-        <label className="block">
+        <div className="block">
           <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
             <span className="text-sm font-medium text-zinc-300">Code Input</span>
             <span className="text-xs text-zinc-500">
@@ -171,15 +171,34 @@ export default function ReviewForm({
               </span>
             </div>
 
-            <textarea
-              value={code}
-              onChange={(event) => onCodeChange(event.target.value)}
-              placeholder="Paste a code snippet to generate a realistic AI review with summary, severity-ranked findings, and an improved implementation preview."
-              spellCheck={false}
-              className="min-h-[360px] w-full resize-none bg-transparent px-4 py-4 font-mono text-[13px] leading-6 text-zinc-100 outline-none placeholder:text-zinc-600"
-            />
+            <div>
+              <div className="mb-2 block text-sm text-zinc-300">Code</div>
+
+              <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b0f]">
+                <Editor
+                  height="420px"
+                  language={language.toLowerCase()}
+                  theme="vs-dark"
+                  value={code}
+                  onChange={onCodeChange}
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    wordWrap: "on",
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
+                    padding: { top: 16, bottom: 16 },
+                    roundedSelection: true,
+                    scrollbar: {
+                      verticalScrollbarSize: 8,
+                      horizontalScrollbarSize: 8,
+                    },
+                  }}
+                />
+              </div>
+            </div>
           </div>
-        </label>
+        </div>
 
         {error ? (
           <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">

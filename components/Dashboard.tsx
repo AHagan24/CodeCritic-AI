@@ -120,6 +120,10 @@ export default function Dashboard() {
     };
   }, []);
 
+  function handleCodeChange(nextCode: string | undefined) {
+    setCode(nextCode ?? "");
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -324,7 +328,7 @@ export default function Dashboard() {
                 reviewType={reviewType}
                 loading={loading}
                 error={error}
-                onCodeChange={setCode}
+                onCodeChange={handleCodeChange}
                 onLanguageChange={setLanguage}
                 onReviewTypeChange={setReviewType}
                 onSubmit={handleSubmit}
