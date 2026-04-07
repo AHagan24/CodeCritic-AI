@@ -3,7 +3,7 @@
 AI-powered code review platform that analyzes, scores, and improves your code in real time.
 
 ## Live Demo
-[Link here]
+[Link here](https://code-critic-ai-six.vercel.app/)
 
 ## Features
 
@@ -56,5 +56,5 @@ Future improvements:
 ## Author
 
 Addison Hagan  
-[LinkedIn]  
-[GitHub]
+[LinkedIn](https://www.linkedin.com/in/addison-hagan-32583732a/)
+[GitHub](https://github.com/AHagan24)
