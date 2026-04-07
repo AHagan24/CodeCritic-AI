@@ -3,6 +3,10 @@ import { connectToDatabase } from "@/app/lib/db";
 import Review from "@/app/models/Review";
 import type { DashboardSummary, ReviewHistoryItem } from "@/app/types/review";
 
+function jsonError(message: string, status: number) {
+  return NextResponse.json({ error: message }, { status });
+}
+
 function getReviewStatus(score: number): ReviewHistoryItem["status"] {
   if (score >= 85) {
     return "Completed";
@@ -99,10 +103,6 @@ export async function GET() {
     return NextResponse.json(dashboardSummary);
   } catch (error) {
     console.error("Dashboard summary error:", error);
-
-    return NextResponse.json(
-      { error: "Failed to load dashboard data." },
-      { status: 500 },
-    );
+    return jsonError("Failed to load dashboard data.", 500);
   }
 }

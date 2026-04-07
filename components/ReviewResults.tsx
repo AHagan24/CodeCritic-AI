@@ -33,7 +33,7 @@ function getScoreTone(score: number) {
 
 function ReviewResults({ result, loading }: ReviewResultsProps) {
   return (
-    <section className="rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.98),rgba(11,11,14,0.96))] p-6 shadow-[0_14px_44px_rgba(0,0,0,0.28)] sm:p-7">
+    <section className="min-w-0 rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.98),rgba(11,11,14,0.96))] p-6 shadow-[0_14px_44px_rgba(0,0,0,0.28)] sm:p-7">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-400">
@@ -93,8 +93,8 @@ function ReviewResults({ result, loading }: ReviewResultsProps) {
       ) : null}
 
       {result ? (
-        <div className="mt-6 space-y-5">
-          <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr_0.9fr]">
+        <div className="mt-6 min-w-0 space-y-5">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)_minmax(0,0.9fr)]">
             <article className="rounded-[28px] border border-white/10 bg-white/[0.045] p-5">
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
                 Review Score

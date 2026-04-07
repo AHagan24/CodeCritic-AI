@@ -17,7 +17,6 @@ import ReviewForm from "@/components/ReviewForm";
 import ReviewResults from "@/components/ReviewResults";
 import type {
   DashboardSummary,
-  ReviewHistoryItem,
   ReviewResponse,
   ReviewStatus,
 } from "@/app/types/review";
@@ -242,8 +241,8 @@ export default function Dashboard() {
       <div className="mx-auto max-w-7xl">
         <div className="rounded-[32px] border border-white/10 bg-[rgba(9,9,11,0.88)] shadow-lg">
           <div className="px-5 py-6 sm:px-6 lg:px-8 lg:py-8">
-            <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-              <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.95),rgba(11,11,14,0.92))] p-6 shadow-md sm:p-7">
+            <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+              <div className="min-w-0 rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.95),rgba(11,11,14,0.92))] p-6 shadow-md sm:p-7">
                 <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1.5 text-[11px] font-medium text-sky-100">
                   <Sparkles className="size-3.5" />
                   AI-Powered Developer Tool
@@ -277,7 +276,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="grid gap-4">
+              <div className="min-w-0 grid gap-4">
                 <article className="rounded-[30px] border border-white/10 bg-[#0f0f12] p-6">
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -398,7 +397,7 @@ export default function Dashboard() {
               ))}
             </section>
 
-            <section className="mt-8 grid gap-6 xl:grid-cols-[1fr_1.04fr]">
+            <section className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.04fr)]">
               <ReviewForm
                 code={code}
                 language={language}
@@ -411,150 +410,6 @@ export default function Dashboard() {
                 onSubmit={handleSubmit}
               />
               <ReviewResults result={result} loading={loading} />
-            </section>
-
-            <section
-              id="recent-reviews"
-              className="mt-8 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]"
-            >
-              <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.98),rgba(11,11,14,0.96))] p-6 sm:p-7">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
-                      Recent Reviews
-                    </p>
-                    <h2 className="mt-2 text-xl font-semibold text-white">
-                      Review history
-                    </h2>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <Link
-                      href="/history"
-                      className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
-                    >
-                      View all
-                      <ChevronRight className="size-3.5" />
-                    </Link>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-zinc-300">
-                      {dashboardSummary.totalReviews} saved
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-5 overflow-hidden rounded-[26px] border border-white/10">
-                  <div className="hidden grid-cols-[1.5fr_0.9fr_1fr_0.75fr_0.85fr_0.9fr] gap-4 bg-white/[0.05] px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500 md:grid">
-                    <span>Snippet</span>
-                    <span>Language</span>
-                    <span>Review Type</span>
-                    <span>Score</span>
-                    <span>Date</span>
-                    <span>Status</span>
-                  </div>
-
-                  <div className="divide-y divide-white/10">
-                    {dashboardLoading ? (
-                      <div className="bg-[#0a0a0d] px-4 py-8 text-sm text-zinc-500">
-                        Loading recent reviews...
-                      </div>
-                    ) : dashboardSummary.recentReviews.length === 0 ? (
-                      <div className="bg-[#0a0a0d] px-4 py-8 text-sm text-zinc-500">
-                        No saved reviews yet.
-                      </div>
-                    ) : (
-                      dashboardSummary.recentReviews.map((review: ReviewHistoryItem) => (
-                        <Link
-                          key={review.id}
-                          href={`/reviews/${review.id}`}
-                          className="grid gap-3 bg-[#0a0a0d] px-4 py-4 transition-colors hover:bg-white/[0.03] md:grid-cols-[1.5fr_0.9fr_1fr_0.75fr_0.85fr_0.9fr] md:items-center"
-                        >
-                          <div>
-                            <p className="font-medium text-white">{review.name}</p>
-                            <p className="mt-1 text-sm text-zinc-500 md:hidden">
-                              {review.language} / {review.reviewType}
-                            </p>
-                          </div>
-                          <p className="hidden text-sm text-zinc-300 md:block">
-                            {review.language}
-                          </p>
-                          <p className="hidden text-sm text-zinc-300 md:block">
-                            {review.reviewType}
-                          </p>
-                          <p className="text-sm font-medium text-white">
-                            {review.score}
-                          </p>
-                          <p className="text-sm text-zinc-400">{review.date}</p>
-                          <div>
-                            <span
-                              className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${getStatusClassName(
-                                review.status,
-                              )}`}
-                            >
-                              {review.status}
-                            </span>
-                          </div>
-                        </Link>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <article className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.98),rgba(11,11,14,0.96))] p-6">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
-                        Languages Reviewed
-                      </p>
-                      <h2 className="mt-2 text-lg font-semibold text-white">
-                        Saved review coverage
-                      </h2>
-                    </div>
-                    <FolderCode className="size-5 text-zinc-500" />
-                  </div>
-
-                  {dashboardLoading ? (
-                    <p className="mt-5 text-sm text-zinc-500">
-                      Loading language coverage...
-                    </p>
-                  ) : languagesReviewed.length === 0 ? (
-                    <div className="mt-5 rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-4">
-                      <p className="text-sm font-medium text-white">
-                        No languages reviewed yet
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-zinc-400">
-                        Language coverage appears automatically once reviews have
-                        been saved.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="mt-5 space-y-4">
-                      {languagesReviewed.map((entry) => (
-                        <div key={entry.language}>
-                          <div className="flex items-center justify-between gap-3 text-sm">
-                            <span className="text-zinc-300">{entry.language}</span>
-                            <span className="text-zinc-500">
-                              {entry.count} review{entry.count === 1 ? "" : "s"}
-                            </span>
-                          </div>
-                          <div className="mt-2 h-2 rounded-full bg-white/8">
-                            <div
-                              className="h-2 rounded-full bg-[linear-gradient(90deg,rgba(244,244,245,0.95),rgba(56,189,248,0.45))]"
-                              style={{
-                                width: `${Math.max(
-                                  (entry.count / dashboardSummary.totalReviews) * 100,
-                                  8,
-                                )}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </article>
-              </div>
             </section>
           </div>
         </div>

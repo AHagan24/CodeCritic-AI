@@ -42,17 +42,17 @@ export default function AppNavbar() {
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-            <div className="flex h-12 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-2 shadow-inner shadow-white/[0.04]">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center">
               <Image
                 src={codeCriticLogo}
                 alt="CodeCritic AI logo"
-                className="h-auto max-h-7 w-auto object-contain"
+                className="h-auto max-h-9 w-auto object-contain"
                 priority
               />
             </div>
 
-            <div className="min-w-0">
-              <p className="truncate text-base font-semibold tracking-tight text-white">
+            <div className="min-w-0 space-y-0.5">
+              <p className="truncate text-[15px] font-semibold tracking-[0.01em] text-white sm:text-base">
                 CodeCritic AI
               </p>
               <p className="truncate text-sm text-zinc-500">

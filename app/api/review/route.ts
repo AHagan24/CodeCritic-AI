@@ -4,6 +4,54 @@ import type { ReviewResponse } from "../../types/review";
 import { connectToDatabase } from "../../lib/db";
 import Review from "../../models/Review";
 import type { ReviewHistoryItem } from "../../types/review";
+import { checkRateLimit } from "../../lib/rate-limit";
+import { parseAndValidateReviewRequest } from "../../lib/review-request";
+
+const REVIEW_RATE_LIMIT = {
+  limit: 5,
+  windowMs: 60_000,
+} as const;
+
+function jsonError(message: string, status: number, headers?: HeadersInit) {
+  return NextResponse.json({ error: message }, { status, headers });
+}
+
+function getClientIpAddress(request: Request) {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+
+  if (forwardedFor) {
+    const firstAddress = forwardedFor
+      .split(",")
+      .map((value) => value.trim())
+      .find(Boolean);
+
+    if (firstAddress) {
+      return firstAddress;
+    }
+  }
+
+  const realIp = request.headers.get("x-real-ip")?.trim();
+
+  if (realIp) {
+    return realIp;
+  }
+
+  return "unknown";
+}
+
+function getRateLimitHeaders(rateLimit: {
+  limit: number;
+  remaining: number;
+  resetAt: number;
+  retryAfterSeconds: number;
+}) {
+  return {
+    "X-RateLimit-Limit": String(rateLimit.limit),
+    "X-RateLimit-Remaining": String(Math.max(0, rateLimit.remaining)),
+    "X-RateLimit-Reset": String(Math.ceil(rateLimit.resetAt / 1000)),
+    "Retry-After": String(rateLimit.retryAfterSeconds),
+  };
+}
 
 const reviewSchema = {
   name: "code_review",
@@ -76,22 +124,30 @@ function isValidReviewResponse(value: unknown): value is ReviewResponse {
   }
 
   const review = value as ReviewResponse;
+  const allowedSeverities = new Set(["low", "medium", "high", "critical"]);
 
   return (
     typeof review.score === "number" &&
     review.score >= 0 &&
     review.score <= 100 &&
     typeof review.summary === "string" &&
+    review.summary.trim().length > 0 &&
     typeof review.improvedCode === "string" &&
+    review.improvedCode.trim().length > 0 &&
     Array.isArray(review.issues) &&
     review.issues.every(
       (issue) =>
-        issue &&
+        Boolean(issue) &&
         typeof issue.title === "string" &&
+        issue.title.trim().length > 0 &&
         typeof issue.description === "string" &&
+        issue.description.trim().length > 0 &&
         typeof issue.severity === "string" &&
+        allowedSeverities.has(issue.severity) &&
         typeof issue.lineReference === "string" &&
-        typeof issue.suggestion === "string",
+        issue.lineReference.trim().length > 0 &&
+        typeof issue.suggestion === "string" &&
+        issue.suggestion.trim().length > 0,
     )
   );
 }
@@ -130,7 +186,13 @@ function formatReviewDate(value: Date | string) {
 }
 
 function parseReviewResponse(value: string): ReviewResponse | null {
-  const parsed: unknown = JSON.parse(value);
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    return null;
+  }
 
   if (!isValidReviewResponse(parsed)) {
     return null;
@@ -162,52 +224,56 @@ export async function GET() {
     return NextResponse.json(recentReviews);
   } catch (error) {
     console.error("Recent reviews error:", error);
-    return NextResponse.json(
-      {
-        error: "Failed to fetch recent reviews",
-        details: String(error),
-      },
-      { status: 500 },
-    );
+    return jsonError("Failed to fetch recent reviews.", 500);
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { code, language, reviewType } = body;
+    const ipAddress = getClientIpAddress(request);
+    const rateLimitKey = `review:${ipAddress}`;
+    const rateLimit = checkRateLimit(
+      rateLimitKey,
+      REVIEW_RATE_LIMIT.limit,
+      REVIEW_RATE_LIMIT.windowMs,
+    );
+    const rateLimitHeaders = getRateLimitHeaders(rateLimit);
 
-    if (!code || typeof code !== "string") {
-      return NextResponse.json({ error: "Code is required." }, { status: 400 });
-    }
-
-    if (!language || typeof language !== "string") {
-      return NextResponse.json(
-        { error: "Language is required." },
-        { status: 400 },
+    if (!rateLimit.allowed) {
+      return jsonError(
+        "Too many review requests. Please try again shortly.",
+        429,
+        rateLimitHeaders,
       );
     }
 
-    if (!reviewType || typeof reviewType !== "string") {
-      return NextResponse.json(
-        { error: "Review type is required." },
-        { status: 400 },
+    const validationResult = await parseAndValidateReviewRequest(request);
+
+    if (!validationResult.success) {
+      return jsonError(
+        validationResult.error,
+        validationResult.status,
+        rateLimitHeaders,
       );
     }
+
+    const { code, language, reviewType } = validationResult.data;
 
     // Keep local/dev usage from burning your credits.
     if (!process.env.OPENAI_API_KEY && process.env.NODE_ENV !== "production") {
-      return NextResponse.json(
-        { error: "AI review service is not configured." },
-        { status: 503 },
+      return jsonError(
+        "AI review service is not configured.",
+        503,
+        rateLimitHeaders,
       );
     }
 
     if (!process.env.OPENAI_API_KEY) {
       console.error("AI review error: OPENAI_API_KEY is not configured.");
-      return NextResponse.json(
-        { error: "AI review service is not configured." },
-        { status: 500 },
+      return jsonError(
+        "AI review service is not configured.",
+        503,
+        rateLimitHeaders,
       );
     }
 
@@ -240,19 +306,17 @@ ${code}`,
 
     if (!output) {
       console.error("AI review error: No AI response was returned.");
-      return NextResponse.json(
-        { error: "No AI review was returned." },
-        { status: 502 },
-      );
+      return jsonError("No AI review was returned.", 502, rateLimitHeaders);
     }
 
     const parsed = parseReviewResponse(output);
 
     if (!parsed) {
       console.error("AI review error: AI returned an invalid review format.");
-      return NextResponse.json(
-        { error: "AI review returned an invalid response." },
-        { status: 502 },
+      return jsonError(
+        "AI review returned an invalid response.",
+        502,
+        rateLimitHeaders,
       );
     }
 
@@ -268,27 +332,31 @@ ${code}`,
       improvedCode: parsed.improvedCode,
     });
 
-    return NextResponse.json({
-      ...parsed,
-      language,
-      reviewType,
-    });
+    return NextResponse.json(
+      {
+        ...parsed,
+        language,
+        reviewType,
+      },
+      {
+        headers: rateLimitHeaders,
+      },
+    );
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown OpenAI error";
 
     if (errorMessage.includes("insufficient_quota")) {
       console.error("AI review error: insufficient_quota", error);
-      return NextResponse.json(
-        { error: "AI review quota has been exceeded." },
-        { status: 503 },
-      );
+      return jsonError("AI review quota has been exceeded.", 503);
+    }
+
+    if (errorMessage.toLowerCase().includes("rate limit")) {
+      console.error("AI review upstream rate limit:", error);
+      return jsonError("AI review service is temporarily busy.", 503);
     }
 
     console.error("AI review error:", error);
-    return NextResponse.json(
-      { error: "Failed to generate AI review." },
-      { status: 500 },
-    );
+    return jsonError("Failed to generate AI review.", 500);
   }
 }

@@ -67,7 +67,7 @@ export default function ReviewForm({
   return (
     <section
       id="workspace-form"
-      className="rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.98),rgba(11,11,14,0.96))] p-6 shadow-[0_14px_44px_rgba(0,0,0,0.28)] sm:p-7"
+      className="min-w-0 rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(18,18,22,0.98),rgba(11,11,14,0.96))] p-6 shadow-[0_14px_44px_rgba(0,0,0,0.28)] sm:p-7"
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -157,12 +157,9 @@ export default function ReviewForm({
         <div className="block">
           <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
             <span className="text-sm font-medium text-zinc-300">Code Input</span>
-            <span className="text-xs text-zinc-500">
-              Best with hooks, services, utilities, or API handlers
-            </span>
           </div>
 
-          <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[#09090c] shadow-inner shadow-white/[0.03]">
+          <div className="min-w-0 overflow-hidden rounded-[28px] border border-white/10 bg-[#09090c] shadow-inner shadow-white/[0.03]">
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <div className="flex items-center gap-2">
                 <span className="size-2 rounded-full bg-rose-400" />
@@ -174,10 +171,10 @@ export default function ReviewForm({
               </span>
             </div>
 
-            <div className="p-3 sm:p-4">
+            <div className="min-w-0 p-3 sm:p-4">
               <div className="mb-3 block text-sm text-zinc-300">Code</div>
 
-              <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b0f]">
+              <div className="min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b0f]">
                 <Editor
                   height="420px"
                   language={language.toLowerCase()}
